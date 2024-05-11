@@ -1,8 +1,16 @@
 #!/bin/bash
 
+# Verificar si yt-dlp está instalado
+if ! command -v yt-dlp &> /dev/null; then
+    echo "yt-dlp no está instalado. Instalando..."
+    brew install yt-dlp  # Esto asume que tienes Homebrew instalado
+fi
+
 # Verificar si se proporcionó la URL del video como argumento
-if [ $# -ne 1 ]; then
-    echo "Uso: $0 URL_DEL_VIDEO"
+if [ $# -lt 1 ]; then
+    echo "Uso: $0 URL_DEL_VIDEO [1|2]"
+    echo "1: Copiar al USB"
+    echo "2: Copiar al escritorio"
     exit 1
 fi
 
@@ -10,16 +18,29 @@ fi
 VIDEO_URL="$1"
 
 # Descargar el video con el mejor formato disponible (MP4)
-yt-dlp --format 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]' "$VIDEO_URL"
+yt-dlp "$VIDEO_URL"
+
+
+
 
 # Comprobar si se descargó el video en formato MP4
 if [ $? -eq 0 ]; then
-    # Copiar el video al USB si la descarga fue exitosa
-    echo "Copiando el video al USB..."
-    # cp *.mp4 /Volumes/USB/
-    cp *.mp4 ~/Desktop/
-    echo "Video copiado exitosamente al USB."
+    # Determinar la ubicación de destino de la copia
+    DESTINATION=""
+    if [ "$2" = "1" ]; then
+        DESTINATION="/Volumes/VIDEOS/"
+    elif [ "$2" = "2" ]; then
+        DESTINATION="$HOME/Desktop/"
+    else
+        echo "Destino no válido. Copiando al escritorio por defecto."
+        DESTINATION="$HOME/Desktop/"
+    fi
     
+    # Copiar el video al destino especificado
+    echo "Copiando el video..."
+    cp *.mp4 "$DESTINATION"
+    echo "Video copiado exitosamente."
+
     # Borrar el archivo de video descargado
     echo "Borrando el archivo descargado..."
     rm *.mp4
